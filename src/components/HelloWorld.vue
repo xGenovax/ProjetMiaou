@@ -1,17 +1,135 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
-    <h2>Chat experience {{pseudo}}</h2>
-    <ul>
+    <v-toolbar dark color="primary">
+      <v-toolbar-side-icon></v-toolbar-side-icon>
+
+      <v-toolbar-title class="white--text">{{title}}</v-toolbar-title>
+
+      <v-spacer></v-spacer>
+
+      <v-btn icon>
+        <v-icon>search</v-icon>
+      </v-btn>
+
+      <v-btn icon @click="addSalon">
+        <v-icon>add</v-icon>
+      </v-btn>
+
+      <v-btn icon>
+        <v-icon>refresh</v-icon>
+      </v-btn>
+
+      <v-btn icon>
+        <v-icon>more_vert</v-icon>
+      </v-btn>
+  </v-toolbar>
+    <!-- <h2>Chat experience</h2>
+    <v-list subheader>
+  <v-subheader>Recent chat</v-subheader>
+  <v-list-tile
+    v-for="item in items"
+    :key="item.title"
+    avatar
+    @click=""
+  >
+    <v-list-tile-avatar>
+      <img :src="item.avatar">
+    </v-list-tile-avatar>
+
+    <v-list-tile-content>
+      <v-list-tile-title v-html="item.title"></v-list-tile-title>
+    </v-list-tile-content>
+
+    <v-list-tile-action>
+      <v-icon :color="item.active ? 'teal' : 'grey'">chat_bubble</v-icon>
+    </v-list-tile-action>
+  </v-list-tile>
+</v-list> -->
+
+<v-divider></v-divider>
+
+<v-list subheader>
+  <v-subheader>Utilisateurs connectés</v-subheader>
+
+  <v-list-tile
+    v-for="(item,key) in utilisateurs"
+    :key="key"
+    avatar
+    @click="choixCible(item,key)"
+  >
+    <v-list-tile-avatar>
+      <v-icon>face</v-icon>
+    </v-list-tile-avatar>
+
+    <v-list-tile-content>
+      <v-list-tile-title v-html="item.pseudo"></v-list-tile-title>
+    </v-list-tile-content>
+  </v-list-tile>
+</v-list>
+
+<v-divider></v-divider>
+
+<v-list subheader>
+  <v-subheader>Salons</v-subheader>
+
+  <v-list-tile
+    v-for="(item,key) in salons"
+    :key="key"
+    avatar
+    @click="choixSalon(key)"
+  >
+    <v-list-tile-avatar>
+      <v-icon>face</v-icon>
+    </v-list-tile-avatar>
+
+    <v-list-tile-content>
+      <v-list-tile-title v-html="getTitre(item)"></v-list-tile-title>
+    </v-list-tile-content>
+  </v-list-tile>
+</v-list>
+
+
+<v-list subheader v-if="selectedSalon">
+  <v-subheader>Chat</v-subheader>
+
+  <v-list-tile
+    v-for="(item,key) in salons[selectedSalon].messages"
+    :key="key"
+    avatar
+  >
+    <v-list-tile-avatar>
+      <v-icon>face</v-icon>
+    </v-list-tile-avatar>
+
+    <v-list-tile-content>
+      <v-list-tile-title v-html="item.pseudo+' : '+item.message"></v-list-tile-title>
+    </v-list-tile-content>
+  </v-list-tile>
+</v-list>
+    <!-- <ul>
       <li v-for="task in utilisateurs" @click="choixCible(task)">
         {{ task.pseudo }}
       </li>
-    </ul>
-    <input v-model="nomCible.pseudo" type="text"/>
-    <button @click="click">OK</button>
-    <button @click="click2">OK2</button>
-            <div><video ref="videoLocal" id="video" width="640" height="480" autoplay muted></video></div>
-            <div><video ref="videoExt" id="video" width="640" height="480" autoplay muted></video></div>
+    </ul> -->
+    <!-- <input v-model="nomCible.pseudo" type="text"/> -->
+    <!-- <button @click="click">OK</button>
+    <button @click="click2">OK2</button> -->
+
+    <v-text-field
+    prepend-icon="msg"
+  v-model="message"
+  :rules="nameRules"
+  :counter="100"
+  label="Message"
+></v-text-field>
+<v-btn
+@click="submit"
+>
+Envoyer
+</v-btn>
+
+            <div> Votre camera: <v-divider></v-divider><video ref="videoLocal" id="video" width="640" height="480" autoplay muted></video></div>
+            <div>{{nomCible.pseudo}}<v-divider></v-divider><video ref="videoExt" id="video" width="640" height="480" autoplay muted></video></div>
   </div>
 </template>
 
@@ -23,41 +141,62 @@ var Peer = require('simple-peer');
 var wrtc = require('wrtc');
 
 
-var config = {
-  apiKey: "AIzaSyA6rhTTjM9Tyu23pe1Ug6FK8s6C7vdRgSA",
-  authDomain: "miaou-87713.firebaseapp.com",
-  databaseURL: "https://miaou-87713.firebaseio.com",
-  projectId: "miaou-87713",
-  storageBucket: "miaou-87713.appspot.com",
-  messagingSenderId: "88588984979"
-};
-var app = firebase.initializeApp(config);
-var db = app.database()
-let utilisateursRef = db.ref('utilisateurs');
+
+
 
 
 export default {
   name: 'HelloWorld',
-  firebase: {
-    utilisateurs: utilisateursRef
-  },
   data () {
     return {
-      msg: 'Miaou3',
-      nom: null,
+      db:null,
+      utilisateursRef:null,
+      salonsRef:null,
+      utilisateurs:[],
+      title: 'Miaou3',
       nomCible:{
           pseudo:null
       },
+      salons:[],
+      selectedSalon:'',
+      selectedSalonRef:null,
       db:null,
       booksRef2:null,
       booksRef:null,
-      pseudo:"null",
+      pseudo:"",
       onlineRef:null,
-      peertab: {}
+      peertab: {},
+      message:"",
+      nameRules: [
+        v => !!v || 'Name is required',
+        v => v.length <= 10 || 'Name must be less than 10 characters'
+      ]
     }
   },
   mounted() {
 
+    var config = {
+      apiKey: "AIzaSyA6rhTTjM9Tyu23pe1Ug6FK8s6C7vdRgSA",
+      authDomain: "miaou-87713.firebaseapp.com",
+      databaseURL: "https://miaou-87713.firebaseio.com",
+      projectId: "miaou-87713",
+      storageBucket: "miaou-87713.appspot.com",
+      messagingSenderId: "88588984979"
+    };
+
+    var app = !firebase.apps.length ? firebase.initializeApp(config) : firebase.app();
+    this.db = app.database();
+    this.utilisateursRef = this.db.ref('utilisateurs');
+    this.utilisateursRef.on('value', (snapshot)=> {
+      const val = snapshot.val();
+      this.utilisateurs = val;
+    })
+
+    this.salonsRef = this.db.ref('salons');
+    this.salonsRef.on('value', (snapshot)=> {
+      const val = snapshot.val();
+      this.salons = val;
+    })
     //booksRef.push({test:"test"})
 
     this.videoLocal = this.$refs.videoLocal;
@@ -70,10 +209,11 @@ export default {
     this.pseudo = this.$route.params.userPseudo;
     if(this.pseudo){
       console.log(this.pseudo);
-      this.nom = this.pseudo;
       //this.utilisateurs = db.ref('utilisateurs');
-      this.onlineRef = db.ref('utilisateurs').push({pseudo:this.pseudo});
-      this.onlineRef.onDisconnect().remove();
+      this.onlineRef = this.db.ref('utilisateurs').push({pseudo:this.pseudo});
+      this.onlineRef.onDisconnect().remove(() => {
+      this.deconnectSalon();
+    });
       console.log("onlineRef ",this.onlineRef);
       //this.utilisateurs.onDisconnect().removeValue();
       this.afficherSelfCamera();
@@ -81,7 +221,7 @@ export default {
 
       //if(this.pseudo === "jo")
         console.log("books/"+this.onlineRef.key)
-        db.ref('books').child(this.onlineRef.key).on('child_added', (snapshot)=>{
+        this.db.ref('books').child(this.onlineRef.key).on('child_added', (snapshot)=>{
           console.log("on child_added ",snapshot.val())
 
               if(!this.peertab[snapshot.val().caller]){
@@ -114,7 +254,7 @@ export default {
 
         });
 
-        db.ref('books').child(this.onlineRef.key).on('child_changed', (snapshot)=>{
+        this.db.ref('books').child(this.onlineRef.key).on('child_changed', (snapshot)=>{
           console.log("on child_changed ",snapshot.val())
 
               if(!this.peertab[snapshot.val().caller]){
@@ -156,7 +296,7 @@ methods: {
    console.log(isInitiator?"Je suis initiator, j'envoie le stream":"je recois le stream")
    peer.on("signal", data => { //when a message is ready to be sent…
      //Envoyer data à l'autre utilisateur
-     db.ref((isInitiator?'books2/'+target:'books/'+target['.key']+'/'+this.onlineRef.key)).set({
+     this.db.ref((isInitiator?'books2/'+target:'books/'+target['.key']+'/'+this.onlineRef.key)).set({
       caller: this.onlineRef.key,
       data: data
     })
@@ -172,7 +312,7 @@ methods: {
    peer.on("close", () => { //call is ended
      console.log("close")
      /* … some DOM related code … */
-     db.ref('books').child(this.onlineRef.key).off();
+     this.db.ref('books').child(this.onlineRef.key).off();
      peer = null;
      this.videoExt.srcObject = "";
      this.videoLocal.srcObject = "";
@@ -189,12 +329,41 @@ methods: {
  })
 
 },
-choixCible(nomCible){
-  console.log(nomCible)
+choixCible(nomCible,key){
   this.nomCible = {
     'pseudo':nomCible.pseudo,
-    '.key':nomCible['.key']
+    '.key':key
   };
+  this.click();
+},
+choixSalon(salon){
+  if(salon != this.selectedSalon){
+    this.deconnectSalon();
+    this.selectedSalon = salon;
+    this.selectedSalonRef = this.db.ref('salons').child(salon);
+    this.selectedSalonRef.child("membres").child(this.onlineRef.key).set(true);
+    this.selectedSalonRef.child("membres").child(this.onlineRef.key).onDisconnect().remove();
+  }
+},
+addSalon(event, nom = "monSalon"){
+  console.log("Ajouter Salon ",nom);
+  this.db.ref('salons').push({nom});;
+},
+getTitre(salon){
+  if(salon.membres){
+    return salon.nom + ' ('+Object.keys(salon.membres).length+')'
+  }else{
+    return salon.nom
+  }
+},
+deconnectSalon(){
+  if(this.selectedSalon){
+    this.db.ref('salons').child(this.selectedSalon).child("membres").child(this.onlineRef.key).remove();
+  }
+},
+submit(event){
+  console.log({pseudo:this.pseudo,message:this.message})
+  this.selectedSalonRef.child("messages").push({pseudo:this.pseudo,message:this.message});
 },
 click2(){
   // console.log("click2")
@@ -216,14 +385,14 @@ click2(){
 click(){
   console.log("CLICK")
   this.peer2 = null;
-  db.ref('books2/'+this.onlineRef.key).off();
+  this.db.ref('books2/'+this.onlineRef.key).off();
   //this.peer1 = null;
   // this.createPeer(true, () => {
   //   console.log("calling", inputCallee)
   // })
 
   this.createPeer(false,this.nomCible, () => {
-    db.ref('books2/'+this.onlineRef.key).on('value', (snapshot)=>{
+    this.db.ref('books2/'+this.onlineRef.key).on('value', (snapshot)=>{
 
       // this.peer1.signal(snapshot.val().data)
       if(snapshot.val())
@@ -237,7 +406,7 @@ click(){
 
 
 //Declencheur
-  db.ref('books/'+this.nomCible['.key']+'/'+this.onlineRef.key).set({
+  this.db.ref('books/'+this.nomCible['.key']+'/'+this.onlineRef.key).set({
    caller: this.onlineRef.key
  })
 

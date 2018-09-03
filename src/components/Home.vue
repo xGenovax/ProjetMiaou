@@ -1,9 +1,25 @@
 <template>
-  <div class="hello">
-    Quel est votre nom ?
-    <input type="text" v-model="pseudo"/>
-    <button @click="click" >Valider</button>
-  </div>
+    <v-card flat>
+  <v-card-title primary-title>
+    <h4>Connexion</h4>
+  </v-card-title>
+  <v-form ref="form" v-model="valid" lazy-validation >
+        <v-text-field
+        prepend-icon="person"
+      v-model="pseudo"
+      :rules="nameRules"
+      :counter="10"
+      label="Quel est votre nom ?"
+      required
+    ></v-text-field>
+    <v-btn
+  :disabled="!valid"
+  @click="submit"
+>
+  Valider
+</v-btn>
+  </v-form>
+</v-card >
 </template>
 
 <script>
@@ -11,7 +27,12 @@ export default {
   name: "Home",
   data() {
     return {
-      pseudo: null,
+      nameRules: [
+        v => !!v || 'Name is required',
+        v => v.length <= 10 || 'Name must be less than 10 characters'
+      ],
+      pseudo: "",
+      valid: true,
       chooseRoom: false,
       roomName: null,
       muted: false,
@@ -22,9 +43,8 @@ export default {
 
   },
   methods: {
-    click(){
-
-      if(this.pseudo)
+    submit(){
+      if(this.valid)
         {
           console.log("click");
           this.$router.push({ name: 'HelloWorld', params: { userPseudo: this.pseudo }});

@@ -1,5 +1,7 @@
 <template>
-  <div class="hello">
+  <v-layout
+  wrap
+>
     <v-toolbar dark color="primary">
       <v-toolbar-side-icon></v-toolbar-side-icon>
 
@@ -47,90 +49,120 @@
 </v-list> -->
 
 <v-divider></v-divider>
+<v-navigation-drawer permanent>
+    <v-toolbar flat>
+      <v-list>
+        <v-list-tile>
+          <v-list-tile-title class="title">
+            Application
+          </v-list-tile-title>
+        </v-list-tile>
+      </v-list>
+    </v-toolbar>
 
-<v-list subheader>
-  <v-subheader>Utilisateurs connectés</v-subheader>
+    <v-divider></v-divider>
 
-  <v-list-tile
-    v-for="(item,key) in utilisateurs"
-    :key="key"
-    avatar
-    @click="choixCible(item,key)"
-  >
-    <v-list-tile-avatar>
-      <v-icon>face</v-icon>
-    </v-list-tile-avatar>
+    <v-list subheader>
+      <v-subheader>Utilisateurs connectés</v-subheader>
 
-    <v-list-tile-content>
-      <v-list-tile-title v-html="item.pseudo"></v-list-tile-title>
-    </v-list-tile-content>
-  </v-list-tile>
-</v-list>
+      <v-list-tile
+        v-for="(item,key) in utilisateurs"
+        :key="key"
+        avatar
+        @click="choixCible(item,key)"
+      >
+        <v-list-tile-avatar>
+          <v-icon>face</v-icon>
+        </v-list-tile-avatar>
 
-<v-divider></v-divider>
+        <v-list-tile-content>
+          <v-list-tile-title v-html="item.pseudo"></v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+    </v-list>
 
-<v-list subheader>
-  <v-subheader>Salons</v-subheader>
+    <v-divider></v-divider>
 
-  <v-list-tile
-    v-for="(item,key) in salons"
-    :key="key"
-    avatar
-    @click="choixSalon(key)"
-  >
-    <v-list-tile-avatar>
-      <v-icon>face</v-icon>
-    </v-list-tile-avatar>
+    <v-list subheader>
+      <v-subheader>Salons</v-subheader>
 
-    <v-list-tile-content>
-      <v-list-tile-title v-html="getTitre(item)"></v-list-tile-title>
-    </v-list-tile-content>
-  </v-list-tile>
-</v-list>
+      <v-list-tile
+        v-for="(item,key) in salons"
+        :key="key"
+        avatar
+        @click="choixSalon(key)"
+      >
+        <v-list-tile-avatar>
+          <v-icon>face</v-icon>
+        </v-list-tile-avatar>
 
+        <v-list-tile-content>
+          <v-list-tile-title v-html="getTitre(item)"></v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+    </v-list>
+  </v-navigation-drawer>
+  <v-content >
+  <v-container >
+    <v-layout row wrap>
+      <v-flex xs4 >
+        <v-card>
+          Votre camera:
+          <v-divider></v-divider>
+          <video ref="videoLocal" id="video" width="320" height="240" autoplay muted></video>
+        </v-card >
+      </v-flex>
+      <v-flex xs4 >
+        <v-card>
+          {{nomCible.pseudo}}
+          <v-divider></v-divider>
+          <video ref="videoExt" id="video" width="320" height="240" autoplay muted></video>
+        </v-card>
+      </v-flex>
+      <v-flex xs12>
+        <v-container v-if="selectedSalon">
+        <v-list subheader >
+          <v-subheader>Chat du salon {{salons[selectedSalon].nom}}</v-subheader>
 
-<v-list subheader v-if="selectedSalon">
-  <v-subheader>Chat</v-subheader>
+          <v-list-tile
+            v-for="(item,key) in salons[selectedSalon].messages"
+            :key="key"
+            avatar
+          >
 
-  <v-list-tile
-    v-for="(item,key) in salons[selectedSalon].messages"
-    :key="key"
-    avatar
-  >
-    <v-list-tile-avatar>
-      <v-icon>face</v-icon>
-    </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-title v-html="item.pseudo+' : '+item.message"></v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+        </v-list>
+            <!-- <ul>
+              <li v-for="task in utilisateurs" @click="choixCible(task)">
+                {{ task.pseudo }}
+              </li>
+            </ul> -->
+            <!-- <input v-model="nomCible.pseudo" type="text"/> -->
+            <!-- <button @click="click">OK</button>
+            <button @click="click2">OK2</button> -->
 
-    <v-list-tile-content>
-      <v-list-tile-title v-html="item.pseudo+' : '+item.message"></v-list-tile-title>
-    </v-list-tile-content>
-  </v-list-tile>
-</v-list>
-    <!-- <ul>
-      <li v-for="task in utilisateurs" @click="choixCible(task)">
-        {{ task.pseudo }}
-      </li>
-    </ul> -->
-    <!-- <input v-model="nomCible.pseudo" type="text"/> -->
-    <!-- <button @click="click">OK</button>
-    <button @click="click2">OK2</button> -->
+            <v-text-field
+            prepend-icon="msg"
+          v-model="message"
+          :rules="nameRules"
+          :counter="100"
+          label="Message"
+        ></v-text-field>
+        <v-btn
+        @click="submit"
+        >
+        Envoyer
+        </v-btn>
+        </v-container>
+      </v-flex>
+    </v-layout>
+  </v-container>
+  </v-content>
 
-    <v-text-field
-    prepend-icon="msg"
-  v-model="message"
-  :rules="nameRules"
-  :counter="100"
-  label="Message"
-></v-text-field>
-<v-btn
-@click="submit"
->
-Envoyer
-</v-btn>
-
-            <div> Votre camera: <v-divider></v-divider><video ref="videoLocal" id="video" width="640" height="480" autoplay muted></video></div>
-            <div>{{nomCible.pseudo}}<v-divider></v-divider><video ref="videoExt" id="video" width="640" height="480" autoplay muted></video></div>
-  </div>
+  </v-layout>
 </template>
 
 <script>
@@ -168,13 +200,13 @@ export default {
       peertab: {},
       message:"",
       nameRules: [
-        v => !!v || 'Name is required',
-        v => v.length <= 10 || 'Name must be less than 10 characters'
+        v => !!v || 'Message vide',
+        v => v.length <= 100 || 'Message trop long'
       ]
     }
   },
   mounted() {
-
+    //Connexion firebase
     var config = {
       apiKey: "AIzaSyA6rhTTjM9Tyu23pe1Ug6FK8s6C7vdRgSA",
       authDomain: "miaou-87713.firebaseapp.com",
@@ -199,23 +231,25 @@ export default {
     })
     //booksRef.push({test:"test"})
 
+    //Recupere les elements video
     this.videoLocal = this.$refs.videoLocal;
     this.videoExt = this.$refs.videoExt;
 
+    //Si pas de pseudo, retour a l'accueil
     if(!this.$route.params.userPseudo){
       this.$router.push({ name: 'Home'});
     }
 
+    //Recupere pseudo envoyé en parametre
     this.pseudo = this.$route.params.userPseudo;
     if(this.pseudo){
       console.log(this.pseudo);
       //this.utilisateurs = db.ref('utilisateurs');
       this.onlineRef = this.db.ref('utilisateurs').push({pseudo:this.pseudo});
-      this.onlineRef.onDisconnect().remove(() => {
-      this.deconnectSalon();
-    });
+      this.onlineRef.onDisconnect().remove();
       console.log("onlineRef ",this.onlineRef);
       //this.utilisateurs.onDisconnect().removeValue();
+      //Affichage de la camera
       this.afficherSelfCamera();
 
 
@@ -364,6 +398,7 @@ deconnectSalon(){
 submit(event){
   console.log({pseudo:this.pseudo,message:this.message})
   this.selectedSalonRef.child("messages").push({pseudo:this.pseudo,message:this.message});
+  this.message = "";
 },
 click2(){
   // console.log("click2")

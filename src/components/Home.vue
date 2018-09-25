@@ -28,8 +28,8 @@ export default {
   data() {
     return {
       nameRules: [
-        v => !!v || 'Name is required',
-        v => v.length <= 10 || 'Name must be less than 10 characters'
+        v => !!v || 'Nom requis',
+        v => v.length <= 10 || 'Le nom doit faire moins de 10 caractères'
       ],
       pseudo: "",
       valid: true,
